@@ -1,0 +1,21 @@
+{
+  "name": "curl2json-demo",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "vue": "^3.4.0",
+    "jmespath": "^0.16.0",
+    "element-plus": "^2.8.6",
+    "highlight.js": "^11.9.0"
+  },
+  "devDependencies": {
+    "vite": "^5.0.0",
+    "@vitejs/plugin-vue": "^5.0.0"
+  }
+}
