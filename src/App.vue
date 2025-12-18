@@ -316,16 +316,22 @@ function onImportObject(obj) {
   margin-bottom: 40px;
 }
 
-/* 步骤切换动画 */
+/* 步骤切换动画 - 左右切换 */
 .step-fade-enter-active,
 .step-fade-leave-active {
   transition: all 0.5s ease;
+  position: absolute;
+  width: 100%;
 }
 
-.step-fade-enter-from,
+.step-fade-enter-from {
+  opacity: 0;
+  transform: translateX(20px);
+}
+
 .step-fade-leave-to {
   opacity: 0;
-  transform: translateY(20px);
+  transform: translateX(-20px);
 }
 
 /* 淡入淡出动画 */

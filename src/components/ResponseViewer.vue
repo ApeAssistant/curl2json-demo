@@ -1,33 +1,24 @@
 <template>
   <el-card shadow="hover">
     <div>
-      <el-row align="middle" justify="space-between" wrap>
-        <el-col :span="12">
-          <span style="font-size: 1.1rem; font-weight: 600">{{ title }}</span>
-        </el-col>
-        <slot></slot>
-        <el-col :span="12" style="text-align: right">
-          <div>
-            <el-tag v-if="truncated" type="warning" style="margin-right: 8px">⚠️ 内容已截断</el-tag>
-            <el-tag v-if="nonJson" type="danger" style="margin-right: 8px">📝 非JSON响应</el-tag>
-            <el-button v-if="exportable" size="small" @click="$emit('export-json')" style="margin-right: 8px">导出JSON</el-button>
-            <el-button v-if="csvExportable" size="small" @click="$emit('export-csv')" style="margin-right: 8px">导出CSV</el-button>
-            <input v-if="importable" type="file" ref="fileRef" @change="onImportChange" accept="application/json" style="display: none" />
-            <el-button v-if="importable" size="small" @click="onClickImport">导入JSON</el-button>
-          </div>
-        </el-col>
-      </el-row>
+      <div style="display: flex; align-items: center; justify-content: space-between">
+        <span>{{ title }}</span>
+        <el-space>
+          <el-tag v-if="truncated" type="warning">⚠️ 内容已截断</el-tag>
+          <el-tag v-if="nonJson" type="danger">📝 非JSON响应</el-tag>
+          <el-button v-if="exportable" size="small" @click="$emit('export-json')">导出JSON</el-button>
+          <el-button v-if="csvExportable" size="small" @click="$emit('export-csv')">导出CSV</el-button>
+          <input v-if="importable" type="file" ref="fileRef" style="display: none" @change="onImportChange" accept="application/json" />
+          <el-button v-if="importable" size="small" @click="onClickImport">导入JSON</el-button>
+        </el-space>
+      </div>
       <el-skeleton v-if="loading" animated rows="4" />
       <el-alert v-else-if="error" :closable="false" :title="error" show-icon type="error" />
       <div v-else>
-        <el-row align="middle" justify="space-between" wrap>
-          <el-col :span="12">
-            <el-tag type="success">✅ 响应正常</el-tag>
-          </el-col>
-          <el-col :span="12" style="text-align: right">
-            <el-text v-if="contentStats" size="small" type="info">{{ contentStats }}</el-text>
-          </el-col>
-        </el-row>
+        <div style="display: flex; align-items: center; justify-content: space-between;margin: 10px 0">
+          <el-tag type="success">✅ 响应正常</el-tag>
+          <el-text v-if="contentStats" size="small" type="info">{{ contentStats }}</el-text>
+        </div>
         <pre
           style="max-height: 80vh; overflow: auto; background: #1a202c; padding: 16px; border-radius: 8px; margin-top: 8px"
         ><code :class="['hljs', nonJson ? 'language-plaintext' : 'language-json']" v-html="highlighted" style="display:block;color:#e2e8f0;background:transparent;white-space:pre-wrap"></code></pre>
