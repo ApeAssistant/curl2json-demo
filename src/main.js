@@ -1,9 +1,9 @@
-import {createApp} from 'vue'
-import App from './App.vue'
-import ElementPlus from 'element-plus/es'
-import 'element-plus/dist/index.css'
-import './main.css'
-import 'highlight.js/styles/atom-one-dark.css'
-const app = createApp(App)
-app.use(ElementPlus)
-app.mount('#app')
+import { createApp } from 'vue';
+import App from './App.vue';
+import ElementPlus from 'element-plus/es';
+import 'element-plus/dist/index.css';
+import './main.css';
+import 'highlight.js/styles/atom-one-dark.css';
+const app = createApp(App);
+app.use(ElementPlus);
+app.mount('#app');

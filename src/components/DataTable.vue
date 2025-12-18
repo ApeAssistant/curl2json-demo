@@ -4,227 +4,253 @@
       <el-row align="middle" justify="space-between" wrap>
         <el-col :span="12">
           <div>
-            <span style="font-size:1.1rem;font-weight:600">{{ title }}</span>
-            <el-text v-if="stats" size="small" style="margin-left:8px" type="info">{{ stats }}</el-text>
+            <span style="font-size: 1.1rem; font-weight: 600">{{ title }}</span>
+            <el-text v-if="stats" size="small" style="margin-left: 8px" type="info">{{ stats }}</el-text>
           </div>
         </el-col>
-        <el-col :span="12" style="text-align:right">
-          <el-button size="small" @click="exportCSV" style="margin-right:8px">📥 导出CSV</el-button>
-          <el-input v-model="search" clearable placeholder="🔍 搜索数据..." style="max-width:320px"/>
+        <el-col :span="12" style="text-align: right">
+          <el-button size="small" @click="exportCSV" style="margin-right: 8px">📥 导出CSV</el-button>
+          <el-input v-model="search" clearable placeholder="🔍 搜索数据..." style="max-width: 320px" />
         </el-col>
       </el-row>
-      <el-table :data="sorted" :row-class-name="getRowClassName" border style="width:100%;margin-top: 20px">
-        <el-table-column v-for="(h,idx) in displayHeaders" :key="h" :label="h" :prop="h" :width="getWidth(h)"
-                         show-overflow-tooltip>
+      <el-table :data="sorted" :row-class-name="getRowClassName" border style="width: 100%; margin-top: 20px">
+        <el-table-column v-for="(h, idx) in displayHeaders" :key="h" :label="h" :prop="h" :width="getWidth(h)" show-overflow-tooltip>
           <template #header>
-            <div :draggable="!resizing" :style="dragStyle(idx, h)" @click="toggleSort(h)"
-                 @dragstart="onDragStart(h)" @drop="onDrop(h)" @dragover.prevent="onDragOver($event, idx)">
+            <div :draggable="!resizing" :style="dragStyle(idx, h)" @click="toggleSort(h)" @dragstart="onDragStart(h)" @drop="onDrop(h)" @dragover.prevent="onDragOver($event, idx)">
               <span>{{ h }}</span>
-              <span v-if="sortKey===h" style="color:#8b5cf6;margin-left:6px">{{ sortAsc ? '▲' : '▼' }}</span>
-              <span v-else style="color:#cbd5e1;font-size:0.7rem;opacity:0.5;margin-left:6px">↕</span>
+              <span v-if="sortKey === h" style="color: #8b5cf6; margin-left: 6px">{{ sortAsc ? '▲' : '▼' }}</span>
+              <span v-else style="color: #cbd5e1; font-size: 0.7rem; opacity: 0.5; margin-left: 6px">↕</span>
             </div>
-            <div :style="{opacity:resizing||undefined}"
-                 style="position:absolute;right:0;top:0;width:8px;height:100%;cursor:col-resize;background:linear-gradient(90deg,transparent 0%,#e2e8f0 50%,transparent 100%);opacity:0;transition:opacity .3s"
-                 @mousedown.stop="startResize(h, $event)"></div>
+            <div
+              :style="{ opacity: resizing || undefined }"
+              style="
+                position: absolute;
+                right: 0;
+                top: 0;
+                width: 8px;
+                height: 100%;
+                cursor: col-resize;
+                background: linear-gradient(90deg, transparent 0%, #e2e8f0 50%, transparent 100%);
+                opacity: 0;
+                transition: opacity 0.3s;
+              "
+              @mousedown.stop="startResize(h, $event)"
+            ></div>
           </template>
           <template #default="scope">
             <span
-                style="font-family:Monaco,Menlo,Ubuntu Mono,monospace;font-size:0.85rem;line-height:1.4;word-break:break-word">{{
-                formatCell(scope.row[h])
-              }}</span>
+              style="
+                font-family:
+                  Monaco,
+                  Menlo,
+                  Ubuntu Mono,
+                  monospace;
+                font-size: 0.85rem;
+                line-height: 1.4;
+                word-break: break-word;
+              "
+              >{{ formatCell(scope.row[h]) }}</span
+            >
           </template>
         </el-table-column>
       </el-table>
       <el-empty v-if="sorted.length === 0" :image-size="80" description="没有找到匹配的数据">
-        <template #image><span style="font-size:4rem;opacity:.5">📊</span></template>
+        <template #image><span style="font-size: 4rem; opacity: 0.5">📊</span></template>
       </el-empty>
     </div>
   </el-card>
 </template>
 
 <script setup>
-import {computed, onUnmounted, ref, watch} from 'vue'
-import {debounce} from '../utils/debounce'
+import { computed, onUnmounted, ref, watch } from 'vue';
+import { debounce } from '../utils/debounce';
 
-const props = defineProps({items: {type: Array, default: () => []}, title: {type: String, default: 'JSON表格'}})
-const emits = defineEmits(['export-csv'])
+const props = defineProps({ items: { type: Array, default: () => [] }, title: { type: String, default: 'JSON表格' } });
+const emits = defineEmits(['export-csv']);
 
-const sortKey = ref('')
-const sortAsc = ref(true)
-const search = ref('')
+const sortKey = ref('');
+const sortAsc = ref(true);
+const search = ref('');
 
 const stats = computed(() => {
-  if (!props.items.length) return null
-  const total = props.items.length
-  const visible = sorted.value.length
-  if (visible === total) return `共 ${total} 条数据`
-  return `显示 ${visible} / ${total} 条数据`
-})
+  if (!props.items.length) return null;
+  const total = props.items.length;
+  const visible = sorted.value.length;
+  if (visible === total) return `共 ${total} 条数据`;
+  return `显示 ${visible} / ${total} 条数据`;
+});
 
 const headers = computed(() => {
-  const first = props.items[0]
-  if (!first || typeof first !== 'object') return []
-  return Object.keys(first)
-})
+  const first = props.items[0];
+  if (!first || typeof first !== 'object') return [];
+  return Object.keys(first);
+});
 
-const keyRows = computed(() => props.items.map((r, i) => ({__key: i, ...r})))
+const keyRows = computed(() => props.items.map((r, i) => ({ __key: i, ...r })));
 
-const filtered = ref(keyRows.value)
+const filtered = ref(keyRows.value);
 
 const runFilter = debounce(() => {
-  const q = search.value.trim().toLowerCase()
-  const rows = keyRows.value
+  const q = search.value.trim().toLowerCase();
+  const rows = keyRows.value;
   if (!q) {
     filtered.value = rows;
-    return
+    return;
   }
-  filtered.value = rows.filter(r => Object.values(r).some(v => String(v).toLowerCase().includes(q)))
-}, 300)
+  filtered.value = rows.filter((r) => Object.values(r).some((v) => String(v).toLowerCase().includes(q)));
+}, 300);
 
-watch([search, keyRows], runFilter, {immediate: true})
+watch([search, keyRows], runFilter, { immediate: true });
 
 const sorted = computed(() => {
-  if (!sortKey.value) return filtered.value
-  const k = sortKey.value
-  const asc = sortAsc.value
-  const arr = [...filtered.value]
+  if (!sortKey.value) return filtered.value;
+  const k = sortKey.value;
+  const asc = sortAsc.value;
+  const arr = [...filtered.value];
   arr.sort((a, b) => {
-    const va = a[k], vb = b[k]
-    if (va == null && vb != null) return asc ? -1 : 1
-    if (va != null && vb == null) return asc ? 1 : -1
-    if (typeof va === 'number' && typeof vb === 'number') return asc ? va - vb : vb - va
-    return asc ? String(va).localeCompare(String(vb)) : String(vb).localeCompare(String(va))
-  })
-  return arr
-})
+    const va = a[k],
+      vb = b[k];
+    if (va == null && vb != null) return asc ? -1 : 1;
+    if (va != null && vb == null) return asc ? 1 : -1;
+    if (typeof va === 'number' && typeof vb === 'number') return asc ? va - vb : vb - va;
+    return asc ? String(va).localeCompare(String(vb)) : String(vb).localeCompare(String(va));
+  });
+  return arr;
+});
 
 function toggleSort(h) {
   if (sortKey.value === h) {
-    sortAsc.value = !sortAsc.value
+    sortAsc.value = !sortAsc.value;
   } else {
     sortKey.value = h;
-    sortAsc.value = true
+    sortAsc.value = true;
   }
 }
 
-const columnOrder = ref([])
-const displayHeaders = computed(() => columnOrder.value.length ? columnOrder.value : headers.value)
+const columnOrder = ref([]);
+const displayHeaders = computed(() => (columnOrder.value.length ? columnOrder.value : headers.value));
 
-watch(headers, (h) => {
-  columnOrder.value = [...h]
-}, {immediate: true})
+watch(
+  headers,
+  (h) => {
+    columnOrder.value = [...h];
+  },
+  { immediate: true }
+);
 
-let dragKey = null
-const dragOverIndex = ref(-1)
-const dragInsertLeft = ref(true)
-const resizing = ref(false)
+let dragKey = null;
+const dragOverIndex = ref(-1);
+const dragInsertLeft = ref(true);
+const resizing = ref(false);
 
 function onDragStart(h) {
-  dragKey = h
+  dragKey = h;
 }
 
 function onDragOver(e, idx) {
-  const w = e.currentTarget.offsetWidth
-  const x = e.offsetX
-  dragOverIndex.value = idx
-  dragInsertLeft.value = x < w / 2
+  const w = e.currentTarget.offsetWidth;
+  const x = e.offsetX;
+  dragOverIndex.value = idx;
+  dragInsertLeft.value = x < w / 2;
 }
 
 function onDrop(target) {
-  if (!dragKey || dragKey === target) return
-  const arr = [...displayHeaders.value]
-  const from = arr.indexOf(dragKey)
-  const to = arr.indexOf(target)
-  if (from < 0 || to < 0) return
-  let insertIndex = dragInsertLeft.value ? to : to + 1
-  if (from < insertIndex) insertIndex--
-  arr.splice(insertIndex, 0, arr.splice(from, 1)[0])
-  columnOrder.value = arr
-  dragKey = null
-  dragOverIndex.value = -1
+  if (!dragKey || dragKey === target) return;
+  const arr = [...displayHeaders.value];
+  const from = arr.indexOf(dragKey);
+  const to = arr.indexOf(target);
+  if (from < 0 || to < 0) return;
+  let insertIndex = dragInsertLeft.value ? to : to + 1;
+  if (from < insertIndex) insertIndex--;
+  arr.splice(insertIndex, 0, arr.splice(from, 1)[0]);
+  columnOrder.value = arr;
+  dragKey = null;
+  dragOverIndex.value = -1;
 }
 
 function formatCell(v) {
-  if (v == null) return ''
-  if (typeof v === 'object') return JSON.stringify(v)
-  return String(v)
+  if (v == null) return '';
+  if (typeof v === 'object') return JSON.stringify(v);
+  return String(v);
 }
 
-function getRowClassName({rowIndex}) {
-  return rowIndex % 2 === 0 ? 'even-row' : 'odd-row'
+function getRowClassName({ rowIndex }) {
+  return rowIndex % 2 === 0 ? 'even-row' : 'odd-row';
 }
 
-const columnWidths = ref({})
+const columnWidths = ref({});
 
 function getWidth(k) {
-  const v = columnWidths.value[k]
-  return v ? v + 'px' : undefined
+  const v = columnWidths.value[k];
+  return v ? v + 'px' : undefined;
 }
 
-let resizeKey = null
-let startX = 0
-let startW = 0
+let resizeKey = null;
+let startX = 0;
+let startW = 0;
 
 function startResize(k, e) {
-  resizeKey = k
-  resizing.value = true
-  startX = e.clientX
-  const th = e.target.closest('th')
-  startW = th ? th.offsetWidth : (columnWidths.value[k] || 120)
-  window.addEventListener('mousemove', onMouseMove)
-  window.addEventListener('mouseup', onMouseUp)
+  resizeKey = k;
+  resizing.value = true;
+  startX = e.clientX;
+  const th = e.target.closest('th');
+  startW = th ? th.offsetWidth : columnWidths.value[k] || 120;
+  window.addEventListener('mousemove', onMouseMove);
+  window.addEventListener('mouseup', onMouseUp);
 }
 
 function onMouseMove(e) {
-  if (!resizeKey) return
-  const dx = e.clientX - startX
-  const w = Math.max(80, Math.min(800, startW + dx))
-  columnWidths.value = {...columnWidths.value, [resizeKey]: w}
+  if (!resizeKey) return;
+  const dx = e.clientX - startX;
+  const w = Math.max(80, Math.min(800, startW + dx));
+  columnWidths.value = { ...columnWidths.value, [resizeKey]: w };
 }
 
 function onMouseUp() {
-  resizeKey = null
-  resizing.value = false
-  window.removeEventListener('mousemove', onMouseMove)
-  window.removeEventListener('mouseup', onMouseUp)
+  resizeKey = null;
+  resizing.value = false;
+  window.removeEventListener('mousemove', onMouseMove);
+  window.removeEventListener('mouseup', onMouseUp);
 }
 
 onUnmounted(() => {
-  window.removeEventListener('mousemove', onMouseMove)
-  window.removeEventListener('mouseup', onMouseUp)
-})
+  window.removeEventListener('mousemove', onMouseMove);
+  window.removeEventListener('mouseup', onMouseUp);
+});
 
 function exportCSV() {
-  if (!props.items.length) return
-  const headers = Object.keys(props.items[0] || {})
-  const rows = props.items.map(r => headers.map(h => {
-    const v = r[h]
-    if (v == null) return ''
-    if (typeof v === 'object') return JSON.stringify(v)
-    return String(v)
-  }))
-  const csv = [headers.join(','), ...rows.map(r => r.map(c => `"${c.replace(/"/g, '""')}"`).join(','))].join('\n')
-  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' })
-  const url = URL.createObjectURL(blob)
-  const a = document.createElement('a')
-  a.href = url
-  a.download = 'export.csv'
-  a.click()
-  URL.revokeObjectURL(url)
+  if (!props.items.length) return;
+  const headers = Object.keys(props.items[0] || {});
+  const rows = props.items.map((r) =>
+    headers.map((h) => {
+      const v = r[h];
+      if (v == null) return '';
+      if (typeof v === 'object') return JSON.stringify(v);
+      return String(v);
+    })
+  );
+  const csv = [headers.join(','), ...rows.map((r) => r.map((c) => `"${c.replace(/"/g, '""')}"`).join(','))].join('\n');
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'export.csv';
+  a.click();
+  URL.revokeObjectURL(url);
 }
 
 function dragStyle(idx, h) {
-  const left = dragOverIndex.value === idx && dragInsertLeft.value
-  const right = dragOverIndex.value === idx && !dragInsertLeft.value
+  const left = dragOverIndex.value === idx && dragInsertLeft.value;
+  const right = dragOverIndex.value === idx && !dragInsertLeft.value;
   return {
     position: 'relative',
     display: 'inline-flex',
     alignItems: 'center',
     width: '100%',
     cursor: 'pointer',
-    borderRadius: left ? '4px 0 0 4px' : (right ? '0 4px 4px 0' : ''),
-    background: left ? 'rgba(34, 197, 94, 0.1)' : (right ? 'rgba(34, 197, 94, 0.1)' : '')
-  }
+    borderRadius: left ? '4px 0 0 4px' : right ? '0 4px 4px 0' : '',
+    background: left ? 'rgba(34, 197, 94, 0.1)' : right ? 'rgba(34, 197, 94, 0.1)' : '',
+  };
 }
 </script>
 

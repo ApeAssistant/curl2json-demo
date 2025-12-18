@@ -1,100 +1,106 @@
 <template>
   <el-card shadow="hover">
-    <div >
+    <div>
       <el-row align="middle" justify="space-between" wrap>
         <el-col :span="12">
-          <span style="font-size:1.1rem;font-weight:600">{{ title }}</span>
+          <span style="font-size: 1.1rem; font-weight: 600">{{ title }}</span>
         </el-col>
-        <el-col :span="12" style="text-align:right">
+        <el-col :span="12" style="text-align: right">
           <div>
-            <el-tag v-if="truncated" type="warning" style="margin-right:8px">⚠️ 内容已截断</el-tag>
-            <el-tag v-if="nonJson" type="danger" style="margin-right:8px">📝 非JSON响应</el-tag>
-            <el-button v-if="exportable" size="small" @click="$emit('export-json')" style="margin-right:8px">导出JSON</el-button>
-            <el-button v-if="csvExportable" size="small" @click="$emit('export-csv')" style="margin-right:8px">导出CSV</el-button>
-            <input v-if="importable" type="file" ref="fileRef" @change="onImportChange" accept="application/json" style="display:none" />
+            <el-tag v-if="truncated" type="warning" style="margin-right: 8px">⚠️ 内容已截断</el-tag>
+            <el-tag v-if="nonJson" type="danger" style="margin-right: 8px">📝 非JSON响应</el-tag>
+            <el-button v-if="exportable" size="small" @click="$emit('export-json')" style="margin-right: 8px">导出JSON</el-button>
+            <el-button v-if="csvExportable" size="small" @click="$emit('export-csv')" style="margin-right: 8px">导出CSV</el-button>
+            <input v-if="importable" type="file" ref="fileRef" @change="onImportChange" accept="application/json" style="display: none" />
             <el-button v-if="importable" size="small" @click="onClickImport">导入JSON</el-button>
           </div>
         </el-col>
       </el-row>
-      <el-skeleton v-if="loading" animated rows="4"/>
-      <el-alert v-else-if="error" :closable="false" :title="error" show-icon type="error"/>
+      <el-skeleton v-if="loading" animated rows="4" />
+      <el-alert v-else-if="error" :closable="false" :title="error" show-icon type="error" />
       <div v-else>
         <el-row align="middle" justify="space-between" wrap>
           <el-col :span="12">
             <el-tag type="success">✅ 响应正常</el-tag>
           </el-col>
-          <el-col :span="12" style="text-align:right">
+          <el-col :span="12" style="text-align: right">
             <el-text v-if="contentStats" size="small" type="info">{{ contentStats }}</el-text>
           </el-col>
         </el-row>
-        <pre style="max-height:80vh;overflow:auto;background:#1a202c;padding:16px;border-radius:8px;margin-top:8px"><code :class="['hljs', nonJson ? 'language-plaintext' : 'language-json']" v-html="highlighted" style="display:block;color:#e2e8f0;background:transparent;white-space:pre-wrap"></code></pre>
+        <pre
+          style="max-height: 80vh; overflow: auto; background: #1a202c; padding: 16px; border-radius: 8px; margin-top: 8px"
+        ><code :class="['hljs', nonJson ? 'language-plaintext' : 'language-json']" v-html="highlighted" style="display:block;color:#e2e8f0;background:transparent;white-space:pre-wrap"></code></pre>
       </div>
     </div>
   </el-card>
 </template>
 
 <script setup>
-import {computed, ref} from 'vue'
-import hljs from 'highlight.js/lib/core'
-import json from 'highlight.js/lib/languages/json'
-import plaintext from 'highlight.js/lib/languages/plaintext'
-hljs.registerLanguage('json', json)
-hljs.registerLanguage('plaintext', plaintext)
-const emits = defineEmits(['export-json','export-csv','import-json'])
+import { computed, ref } from 'vue';
+import hljs from 'highlight.js/lib/core';
+import json from 'highlight.js/lib/languages/json';
+import plaintext from 'highlight.js/lib/languages/plaintext';
+hljs.registerLanguage('json', json);
+hljs.registerLanguage('plaintext', plaintext);
+const emits = defineEmits(['export-json', 'export-csv', 'import-json']);
 const props = defineProps({
-  data: {default: null},
-  text: {type: String, default: ''},
-  title: {type: String, default: '原始响应'},
-  loading: {type: Boolean, default: false},
-  error: {type: String, default: ''},
-  truncated: {type: Boolean, default: false},
-  nonJson: {type: Boolean, default: false},
-  exportable: {type: Boolean, default: true},
-  importable: {type: Boolean, default: false},
-  csvExportable: {type: Boolean, default: false}
-})
+  data: { default: null },
+  text: { type: String, default: '' },
+  title: { type: String, default: '原始响应' },
+  loading: { type: Boolean, default: false },
+  error: { type: String, default: '' },
+  truncated: { type: Boolean, default: false },
+  nonJson: { type: Boolean, default: false },
+  exportable: { type: Boolean, default: true },
+  importable: { type: Boolean, default: false },
+  csvExportable: { type: Boolean, default: false },
+});
 const display = computed(() => {
-  if (props.nonJson) return props.text || ''
+  if (props.nonJson) return props.text || '';
   try {
-    return JSON.stringify(props.data, null, 2)
+    return JSON.stringify(props.data, null, 2);
   } catch {
-    return String(props.data)
+    return String(props.data);
   }
-})
+});
 const contentStats = computed(() => {
   if (props.nonJson) {
-    const length = props.text?.length || 0
-    return `文本长度: ${length} 字符`
+    const length = props.text?.length || 0;
+    return `文本长度: ${length} 字符`;
   }
   if (props.data) {
     if (Array.isArray(props.data)) {
-      return `数组包含 ${props.data.length} 个元素`
+      return `数组包含 ${props.data.length} 个元素`;
     } else if (typeof props.data === 'object') {
-      const keys = Object.keys(props.data)
-      return `对象包含 ${keys.length} 个属性`
+      const keys = Object.keys(props.data);
+      return `对象包含 ${keys.length} 个属性`;
     }
   }
-  return null
-})
-const highlighted = computed(()=>{
-  const s = display.value || ''
-  const lang = props.nonJson ? 'plaintext' : 'json'
-  try { return hljs.highlight(s, { language: lang }).value } catch { return s }
-})
-const fileRef = ref(null)
-function onClickImport(){
-  fileRef.value && fileRef.value.click()
-}
-function onImportChange(e){
-  const f = e.target.files && e.target.files[0]
-  if(!f) return
-  const reader = new FileReader()
-  reader.onload = () => {
-    try{
-      const obj = JSON.parse(String(reader.result))
-      emits('import-json', obj)
-    }catch(err){}
+  return null;
+});
+const highlighted = computed(() => {
+  const s = display.value || '';
+  const lang = props.nonJson ? 'plaintext' : 'json';
+  try {
+    return hljs.highlight(s, { language: lang }).value;
+  } catch {
+    return s;
   }
-  reader.readAsText(f)
+});
+const fileRef = ref(null);
+function onClickImport() {
+  fileRef.value && fileRef.value.click();
+}
+function onImportChange(e) {
+  const f = e.target.files && e.target.files[0];
+  if (!f) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const obj = JSON.parse(String(reader.result));
+      emits('import-json', obj);
+    } catch (err) {}
+  };
+  reader.readAsText(f);
 }
 </script>
