@@ -4,20 +4,21 @@
       <h1 style="font-size:2.5rem;font-weight:700;margin:0">🌐 Curl to JSON</h1>
       <p style="font-size:1.1rem;margin:8px 0 0 0;opacity:.9">快速将cURL命令转换为可视化JSON数据的工具</p>
     </div>
-    
     <!-- 使用Element Plus的Steps组件 -->
     <el-steps :active="currentStep - 1" finish-status="success" align-center style="margin-bottom: 40px">
-      <el-step v-for="(step, index) in steps" :key="index" :title="step.title" :description="step.description"></el-step>
+      <el-step v-for="(step, index) in steps" :key="index" :title="step.title"
+               :description="step.description"></el-step>
     </el-steps>
-    
+
     <!-- 步骤内容区域 -->
     <div class="steps-content">
       <!-- 步骤一：curl命令发送与结果展示 -->
-      <div v-if="currentStep >= 1" class="step-content">
-        <CurlInput style="width: 50vw;margin: 0 auto" v-model="curlText" v-model:proxy="proxy" :valid="parseValid"
+      <div class="step-content">
+        <CurlInput v-if="currentStep === 1" style="width: 50vw;margin: 0 auto" v-model="curlText" v-model:proxy="proxy"
+                   :valid="parseValid"
                    @send="onSend"/>
         <transition name="fade">
-          <div v-if="hasData" style="margin-top: 20px">
+          <div v-if="hasData&&(currentStep === 1 || currentStep === 2)" style="margin-top: 20px">
             <el-divider></el-divider>
             <div style="width: 70vw;margin:0 auto">
               <ResponseViewer :data="rawData" :error="error" :loading="loading" :nonJson="nonJson" :text="rawText"
@@ -27,23 +28,24 @@
           </div>
         </transition>
       </div>
-      
+
       <!-- 步骤二：结果过滤功能 -->
-      <div v-if="currentStep >= 2" class="step-content">
+      <div v-if="currentStep === 2" class="step-content">
         <transition name="fade">
           <div style="margin-top: 20px">
             <FilterPanel v-model="expr" @clear="expr=''" style="margin-bottom: 20px"/>
             <el-divider></el-divider>
             <div style="width: 70vw;margin:0 auto">
               <ResponseViewer :data="filtered" :title="'过滤结果'" :exportable="hasFiltered" :csvExportable="isArray"
-                              @export-json="exportJSON(true)" @export-csv="exportCSV" @export-filtered-json="exportJSON(true)"/>
+                              @export-json="exportJSON(true)" @export-csv="exportCSV"
+                              @export-filtered-json="exportJSON(true)"/>
             </div>
           </div>
         </transition>
       </div>
-      
+
       <!-- 步骤三：表格结构化展示 -->
-      <div v-if="currentStep >= 3" class="step-content">
+      <div v-if="currentStep === 3" class="step-content">
         <transition name="fade">
           <div style="margin-top: 20px">
             <el-divider></el-divider>
@@ -120,10 +122,13 @@ async function onSend() {
   rawData.value = null
   rawText.value = ''
   const p = parseCurl(curlText.value)
-  if (!p.ok) { error.value = p.error; return }
+  if (!p.ok) {
+    error.value = p.error;
+    return
+  }
   const req = p.request
   let url = req.url
-  const opts = { method: req.method, headers: { ...req.headers } }
+  const opts = {method: req.method, headers: {...req.headers}}
   if (req.body != null && req.method !== 'GET') {
     if (typeof req.body === 'object') {
       opts.body = JSON.stringify(req.body)
@@ -147,14 +152,20 @@ async function onSend() {
           res = await fetch(px + url, opts)
           lastErr = null
           break
-        } catch (ee) { lastErr = ee }
+        } catch (ee) {
+          lastErr = ee
+        }
       }
       if (!res && lastErr) throw lastErr
     }
     const txt = await res.text()
     const max = 1024 * 1024
     rawText.value = txt.length > max ? (truncated.value = true, txt.slice(0, max)) : txt
-    try { rawData.value = JSON.parse(rawText.value) } catch { nonJson.value = true }
+    try {
+      rawData.value = JSON.parse(rawText.value)
+    } catch {
+      nonJson.value = true
+    }
   } catch (e) {
     error.value = String(e.message || e)
   } finally {
@@ -242,11 +253,11 @@ function onImportObject(obj) {
   .app-container {
     padding: 10px;
   }
-  
+
   .step-content {
     margin-bottom: 20px;
   }
-  
+
   .el-steps {
     margin-bottom: 20px;
   }
