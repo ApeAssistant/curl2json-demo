@@ -3,22 +3,22 @@
     <!-- 步骤条与导航按钮整合 -->
     <div>
       <el-row :gutter="20" align="middle">
-        <el-col :span="6">
+        <el-col :span="5">
           <div>
             <h1>🌐 Curl to JSON</h1>
             <p>快速将cURL命令转换为可视化JSON数据的工具</p>
           </div>
         </el-col>
         <!-- 左边：步骤条 -->
-        <el-col :span="12">
+        <el-col :span="15">
           <el-steps :active="currentStep - 1" finish-status="success" align-center>
             <el-step v-for="(step, index) in steps" :key="index" :title="step.title" :description="step.description"></el-step>
           </el-steps>
         </el-col>
         <!-- 右边：导航按钮 -->
-        <el-col :span="6">
-          <el-button type="primary" plain :disabled="currentStep === 1" @click="prevStep" size="large"> 上一步 </el-button>
-          <el-button type="primary" :disabled="!canGoNext" @click="nextStep" size="large"> 下一步 </el-button>
+        <el-col :span="4">
+          <el-button type="primary" circle :icon="ArrowLeft" :disabled="currentStep === 1" @click="prevStep"> </el-button>
+          <el-button type="primary" circle :icon="ArrowRight" :disabled="currentStep === 3" @click="nextStep"> </el-button>
         </el-col>
       </el-row>
     </div>
@@ -38,37 +38,27 @@
               <!-- 右边：原始响应组件 -->
               <el-col :span="12">
                 <transition name="fade">
-                  <div v-if="hasData">
-                    <ResponseViewer
-                      :data="rawData"
-                      :error="error"
-                      :loading="loading"
-                      :nonJson="nonJson"
-                      :text="rawText"
-                      :title="'原始响应'"
-                      :truncated="truncated"
-                      :exportable="hasData"
-                      :importable="true"
-                      @export-json="exportJSON(false)"
-                      @import-json="onImportObject"
-                    />
-                  </div>
-                  <div v-else>
-                    <el-empty description="发送请求后将显示原始响应结果"></el-empty>
-                  </div>
+                  <ResponseViewer
+                    :data="rawData"
+                    :error="error"
+                    :loading="loading"
+                    :nonJson="nonJson"
+                    :text="rawText"
+                    :title="'原始响应'"
+                    :truncated="truncated"
+                    :exportable="hasData"
+                    :importable="true"
+                    @export-json="exportJSON(false)"
+                    @import-json="onImportObject"
+                  />
                 </transition>
               </el-col>
             </el-row>
           </div>
         </transition>
-
         <!-- 步骤二：结果过滤功能 -->
         <transition name="step-fade" mode="out-in">
           <div v-if="currentStep === 2" key="2" class="step-content">
-            <!-- 过滤条件设置区域 -->
-            <FilterPanel v-model="expr" @clear="expr = ''" />
-            <el-divider></el-divider>
-
             <!-- 左右结构：原始响应 + 过滤结果 -->
             <el-row :gutter="20">
               <!-- 左边：原始响应组件 -->
@@ -97,7 +87,9 @@
                   @export-json="exportJSON(true)"
                   @export-csv="exportCSV"
                   @export-filtered-json="exportJSON(true)"
-                />
+                >
+                  <FilterPanel v-model="expr" @clear="expr = ''" />
+                </ResponseViewer>
               </el-col>
             </el-row>
           </div>
@@ -125,6 +117,7 @@ import FilterPanel from './components/FilterPanel.vue';
 import DataTable from './components/DataTable.vue';
 import { parseCurl } from './utils/curlParser';
 import { query } from './utils/jmesPathHelper';
+import { ArrowLeft, ArrowRight } from '@element-plus/icons-vue';
 
 const curlText = ref('');
 const proxy = ref('');
@@ -261,7 +254,9 @@ const filteredArray = computed(() => {
 
 function exportJSON(onlyFiltered) {
   const data = onlyFiltered ? filtered.value : nonJson.value ? rawText.value : rawData.value;
-  const blob = new Blob([typeof data === 'string' ? data : JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const blob = new Blob([typeof data === 'string' ? data : JSON.stringify(data, null, 2)], {
+    type: 'application/json',
+  });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;

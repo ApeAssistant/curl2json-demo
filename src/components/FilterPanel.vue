@@ -5,7 +5,6 @@
         <span style="font-weight: 600; font-size: 1.1rem">🔍 JMESPath 过滤器</span>
         <el-text size="small" style="display: block; margin-top: 4px" type="info">使用表达式过滤和转换 JSON 数据</el-text>
       </div>
-
       <el-button plain style="width: 100%; margin-bottom: 16px" type="danger" @click="$emit('clear')">🗑️ 清空过滤器 </el-button>
       <div style="width: 100%">
         <el-row align="middle" justify="space-between" wrap>

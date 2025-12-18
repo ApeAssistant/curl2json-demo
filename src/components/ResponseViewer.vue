@@ -5,6 +5,7 @@
         <el-col :span="12">
           <span style="font-size: 1.1rem; font-weight: 600">{{ title }}</span>
         </el-col>
+        <slot></slot>
         <el-col :span="12" style="text-align: right">
           <div>
             <el-tag v-if="truncated" type="warning" style="margin-right: 8px">⚠️ 内容已截断</el-tag>
