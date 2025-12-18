@@ -1,14 +1,43 @@
 <template>
   <div class="app-container">
-    <div style="text-align: center;margin-bottom: 20px">
-      <h1 style="font-size:2.5rem;font-weight:700;margin:0">🌐 Curl to JSON</h1>
-      <p style="font-size:1.1rem;margin:8px 0 0 0;opacity:.9">快速将cURL命令转换为可视化JSON数据的工具</p>
+    <!-- 步骤条与导航按钮整合 -->
+    <div style="margin-bottom: 40px;">
+      <el-row :gutter="20" align="middle">
+       <el-col :span="6">
+         <div style="text-align: center;margin-bottom: 20px">
+           <h1 style="font-size:2.5rem;font-weight:700;margin:0">🌐 Curl to JSON</h1>
+           <p style="font-size:1.1rem;margin:8px 0 0 0;opacity:.9">快速将cURL命令转换为可视化JSON数据的工具</p>
+         </div>
+       </el-col>
+        <!-- 左边：步骤条 -->
+        <el-col :span="12">
+          <el-steps :active="currentStep - 1" finish-status="success" align-center>
+            <el-step v-for="(step, index) in steps" :key="index" :title="step.title" :description="step.description"></el-step>
+          </el-steps>
+        </el-col>
+        <!-- 右边：导航按钮 -->
+        <el-col :span="6" style="text-align: right;">
+          <el-button 
+            type="primary" 
+            plain 
+            :disabled="currentStep === 1" 
+            @click="prevStep"
+            size="large"
+            style="margin-right: 10px;"
+          >
+            上一步
+          </el-button>
+          <el-button 
+            type="primary" 
+            :disabled="!canGoNext"
+            @click="nextStep"
+            size="large"
+          >
+            下一步
+          </el-button>
+        </el-col>
+      </el-row>
     </div>
-    
-    <!-- 使用Element Plus的Steps组件 -->
-    <el-steps :active="currentStep - 1" finish-status="success" align-center style="margin-bottom: 40px">
-      <el-step v-for="(step, index) in steps" :key="index" :title="step.title" :description="step.description"></el-step>
-    </el-steps>
     
     <!-- 步骤内容区域 -->
     <div class="steps-content">
@@ -17,32 +46,50 @@
         <!-- 步骤一：curl命令发送与结果展示 -->
         <transition name="step-fade" mode="out-in">
           <div v-if="currentStep === 1" key="1" class="step-content">
-            <CurlInput style="width: 50vw;margin: 0 auto" v-model="curlText" v-model:proxy="proxy" :valid="parseValid"
-                       @send="onSend"/>
-            <transition name="fade">
-              <div v-if="hasData" style="margin-top: 20px">
-                <el-divider></el-divider>
-                <div style="width: 70vw;margin:0 auto">
-                  <ResponseViewer :data="rawData" :error="error" :loading="loading" :nonJson="nonJson" :text="rawText"
-                                  :title="'原始响应'" :truncated="truncated" :exportable="hasData" :importable="true"
-                                  @export-json="exportJSON(false)" @import-json="onImportObject"/>
-                </div>
-              </div>
-            </transition>
+            <el-row :gutter="20">
+              <!-- 左边：curl发送组件 -->
+              <el-col :span="12" style="margin-bottom: 0;">
+                <CurlInput style="width: 100%" v-model="curlText" v-model:proxy="proxy" :valid="parseValid"
+                           @send="onSend"/>
+              </el-col>
+              <!-- 右边：原始响应组件 -->
+              <el-col :span="12" style="margin-bottom: 0;">
+                <transition name="fade">
+                  <div v-if="hasData" style="height: 100%;">
+                    <ResponseViewer :data="rawData" :error="error" :loading="loading" :nonJson="nonJson" :text="rawText"
+                                    :title="'原始响应'" :truncated="truncated" :exportable="hasData" :importable="true"
+                                    @export-json="exportJSON(false)" @import-json="onImportObject"/>
+                  </div>
+                  <div v-else style="display: flex; align-items: center; justify-content: center; height: 100%; min-height: 300px; background-color: #f5f7fa; border-radius: 8px;">
+                    <el-empty description="发送请求后将显示原始响应结果"></el-empty>
+                  </div>
+                </transition>
+              </el-col>
+            </el-row>
           </div>
         </transition>
         
         <!-- 步骤二：结果过滤功能 -->
         <transition name="step-fade" mode="out-in">
           <div v-if="currentStep === 2" key="2" class="step-content">
-            <div style="margin-top: 20px">
-              <FilterPanel v-model="expr" @clear="expr=''" style="margin-bottom: 20px"/>
-              <el-divider></el-divider>
-              <div style="width: 70vw;margin:0 auto">
+            <!-- 过滤条件设置区域 -->
+            <FilterPanel v-model="expr" @clear="expr=''" style="margin-bottom: 20px"/>
+            <el-divider></el-divider>
+            
+            <!-- 左右结构：原始响应 + 过滤结果 -->
+            <el-row :gutter="20">
+              <!-- 左边：原始响应组件 -->
+              <el-col :span="12" style="margin-bottom: 0;">
+                <ResponseViewer :data="rawData" :error="error" :loading="loading" :nonJson="nonJson" :text="rawText"
+                                :title="'原始响应'" :truncated="truncated" :exportable="hasData" :importable="true"
+                                @export-json="exportJSON(false)" @import-json="onImportObject"/>
+              </el-col>
+              <!-- 右边：过滤结果组件 -->
+              <el-col :span="12" style="margin-bottom: 0;">
                 <ResponseViewer :data="filtered" :title="'过滤结果'" :exportable="hasFiltered" :csvExportable="isArray"
                                 @export-json="exportJSON(true)" @export-csv="exportCSV" @export-filtered-json="exportJSON(true)"/>
-              </div>
-            </div>
+              </el-col>
+            </el-row>
           </div>
         </transition>
         
@@ -57,25 +104,7 @@
         </transition>
       </div>
       
-      <!-- 步骤导航按钮 -->
-      <div class="step-navigation" style="text-align: center;margin-top: 40px">
-        <el-button 
-          type="primary" 
-          plain 
-          :disabled="currentStep === 1" 
-          @click="prevStep"
-        >
-          上一步
-        </el-button>
-        <el-button 
-          type="primary" 
-          :disabled="!canGoNext"
-          @click="nextStep"
-          style="margin-left: 20px"
-        >
-          下一步
-        </el-button>
-      </div>
+
     </div>
   </div>
 </template>
@@ -264,7 +293,6 @@ function onImportObject(obj) {
 
 <style>
 .app-container {
-  max-width: 1200px;
   margin: 0 auto;
   padding: 20px;
 }
