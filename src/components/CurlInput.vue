@@ -8,7 +8,7 @@
       <div>
         <div class="title">curl 命令</div>
         <el-input v-model="text" :rows="6" placeholder="粘贴curl命令" type="textarea" />
-        <el-button style="width: 100%; margin-bottom: 16px" :disabled="disabled" size="large" type="success" @click="$emit('send')"> 🚀 {{ disabled ? '解析失败' : '发送请求' }} </el-button>
+        <el-button style="width: 100%; margin: 16px 0" :disabled="disabled" size="large" type="success" @click="$emit('send')"> 🚀 {{ disabled ? '解析失败' : '发送请求' }} </el-button>
         <el-alert :closable="false" :type="disabled ? 'error' : 'success'" center>
           <template #title>状态：{{ disabled ? '解析失败' : '就绪' }}</template>
         </el-alert>
@@ -18,11 +18,6 @@
         <div style="background: #2d3748; border-radius: 8px; padding: 16px">
           <pre style="margin: 0"><code class="hljs language-bash" v-html="highlighted" style="display:block;color:#e2e8f0;background:transparent;white-space:pre-wrap"></code></pre>
         </div>
-      </div>
-      <div>
-        <div class="title">🌐 CORS 代理设置</div>
-        <el-input v-model="proxyModel" placeholder="CORS代理前缀，如 https://cors.isomorphic-git.org" />
-        <el-text size="small" type="info">💡 如果遇到跨域问题，请配置代理</el-text>
       </div>
       <div>
         <div class="title">📚 示例命令</div>
