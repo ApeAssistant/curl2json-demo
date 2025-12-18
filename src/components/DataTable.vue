@@ -1,5 +1,5 @@
 <template>
-  <el-card shadow="hover" style="margin: 40px">
+  <el-card shadow="hover">
     <div>
       <el-row align="middle" justify="space-between" wrap>
         <el-col :span="12">

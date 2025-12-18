@@ -1,35 +1,35 @@
 <template>
   <el-card shadow="hover">
-    <div style="width: 100%">
-      <div style="width: 100%; margin: 10px 0">
-        <span style="font-weight: 600; font-size: 1.1rem">📝 cURL 命令输入</span>
-        <el-text size="small" style="display: block; margin-top: 4px" type="info">粘贴您的 cURL 命令并配置代理设置 </el-text>
-      </div>
-      <div style="width: 100%; margin-bottom: 16px">
-        <el-text>curl 命令</el-text>
+    <template #header>
+      <span>📝 cURL 命令输入</span>
+      <el-text size="small" type="info">粘贴您的 cURL 命令并配置代理设置 </el-text>
+    </template>
+    <div>
+      <div>
+        <div class="title">curl 命令</div>
         <el-input v-model="text" :rows="6" placeholder="粘贴curl命令" type="textarea" />
+        <el-button style="width: 100%; margin-bottom: 16px" :disabled="disabled" size="large" type="success" @click="$emit('send')"> 🚀 {{ disabled ? '解析失败' : '发送请求' }} </el-button>
+        <el-alert :closable="false" :type="disabled ? 'error' : 'success'" center>
+          <template #title>状态：{{ disabled ? '解析失败' : '就绪' }}</template>
+        </el-alert>
       </div>
-      <div style="width: 100%; margin-bottom: 16px">
-        <el-text>语法高亮预览</el-text>
+      <div>
+        <div class="title">语法高亮预览</div>
         <div style="background: #2d3748; border-radius: 8px; padding: 16px">
           <pre style="margin: 0"><code class="hljs language-bash" v-html="highlighted" style="display:block;color:#e2e8f0;background:transparent;white-space:pre-wrap"></code></pre>
         </div>
       </div>
-      <div style="width: 100%; margin-bottom: 16px">
-        <el-text>🌐 CORS 代理设置</el-text>
+      <div>
+        <div class="title">🌐 CORS 代理设置</div>
         <el-input v-model="proxyModel" placeholder="CORS代理前缀，如 https://cors.isomorphic-git.org" />
-        <el-text size="small" style="display: block; margin-top: 6px" type="info">💡 如果遇到跨域问题，请配置代理</el-text>
+        <el-text size="small" type="info">💡 如果遇到跨域问题，请配置代理</el-text>
       </div>
-      <el-button :disabled="disabled" size="large" style="width: 100%; margin-bottom: 16px" type="success" @click="$emit('send')"> 🚀 {{ disabled ? '解析失败' : '发送请求' }} </el-button>
-      <el-alert :closable="false" :type="disabled ? 'error' : 'success'" center style="margin-bottom: 16px">
-        <template #title>状态：{{ disabled ? '解析失败' : '就绪' }}</template>
-      </el-alert>
-      <div style="width: 100%">
-        <el-text>📚 示例命令</el-text>
-        <div style="display: flex; flex-wrap: wrap; margin-top: 8px">
-          <el-button plain size="small" style="margin: 0 8px 8px 0" @click="loadExample(0)">示例 GET</el-button>
-          <el-button plain size="small" style="margin: 0 8px 8px 0" @click="loadExample(1)">示例 POST</el-button>
-          <el-button plain size="small" style="margin: 0 8px 8px 0" @click="loadExample(2)">示例 错误</el-button>
+      <div>
+        <div class="title">📚 示例命令</div>
+        <div>
+          <el-button plain size="small" @click="loadExample(0)">示例 GET</el-button>
+          <el-button plain size="small" @click="loadExample(1)">示例 POST</el-button>
+          <el-button plain size="small" @click="loadExample(2)">示例 错误</el-button>
         </div>
       </div>
     </div>
@@ -40,6 +40,7 @@
 import { computed } from 'vue';
 import hljs from 'highlight.js/lib/core';
 import bash from 'highlight.js/lib/languages/bash';
+
 hljs.registerLanguage('bash', bash);
 
 const props = defineProps({
@@ -69,3 +70,21 @@ function loadExample(i) {
   emits('update:modelValue', samples[i]);
 }
 </script>
+<style scoped>
+.title {
+  font-size: 16px;
+  margin: 10px 0;
+  font-weight: bold;
+  padding: 10px 0;
+}
+.title::before {
+  content: '#';
+  color: #4673e5;
+  width: 14px;
+  height: 26px;
+  line-height: 26px;
+  margin-right: 8px;
+  background: #4673e5;
+  border-radius: 2px;
+}
+</style>

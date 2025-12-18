@@ -1,6 +1,6 @@
 <template>
   <el-card shadow="hover">
-    <div>
+    <template #header>
       <div style="display: flex; align-items: center; justify-content: space-between">
         <span>{{ title }}</span>
         <el-space>
@@ -12,10 +12,12 @@
           <el-button v-if="importable" size="small" @click="onClickImport">导入JSON</el-button>
         </el-space>
       </div>
+    </template>
+    <div>
       <el-skeleton v-if="loading" animated rows="4" />
       <el-alert v-else-if="error" :closable="false" :title="error" show-icon type="error" />
       <div v-else>
-        <div style="display: flex; align-items: center; justify-content: space-between;margin: 10px 0">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin: 0 0 10px 0">
           <el-tag type="success">✅ 响应正常</el-tag>
           <el-text v-if="contentStats" size="small" type="info">{{ contentStats }}</el-text>
         </div>

@@ -1,7 +1,7 @@
 <template>
   <div class="app-container">
     <!-- 步骤条与导航按钮整合 -->
-    <div>
+    <el-card style="margin-bottom: 20px" shadow="hover">
       <el-row :gutter="20" align="middle">
         <el-col :span="5">
           <div>
@@ -21,7 +21,7 @@
           <el-button type="primary" circle :icon="ArrowRight" :disabled="currentStep === 3" @click="nextStep"> </el-button>
         </el-col>
       </el-row>
-    </div>
+    </el-card>
 
     <!-- 步骤内容区域 -->
     <div class="steps-content">
@@ -99,10 +99,7 @@
         <!-- 步骤三：表格结构化展示 -->
         <transition name="step-fade" mode="out-in">
           <div v-if="currentStep === 3" key="3" class="step-content">
-            <div>
-              <el-divider></el-divider>
               <DataTable :items="filteredArray" title="JSON表格" @export-csv="exportCSV" />
-            </div>
           </div>
         </transition>
       </div>
