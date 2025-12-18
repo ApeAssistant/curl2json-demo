@@ -38,27 +38,30 @@
               <!-- 右边：原始响应组件 -->
               <el-col :span="12">
                 <transition name="fade">
-                  <ResponseViewer
-                    :data="rawData"
-                    :error="error"
-                    :loading="loading"
-                    :nonJson="nonJson"
-                    :text="rawText"
-                    :title="'原始响应'"
-                    :truncated="truncated"
-                    :exportable="hasData"
-                    :importable="true"
-                    @export-json="exportJSON(false)"
-                    @import-json="onImportObject"
-                  />
+                    <ResponseViewer
+                      :data="rawData"
+                      :error="error"
+                      :loading="loading"
+                      :nonJson="nonJson"
+                      :text="rawText"
+                      :title="'原始响应'"
+                      :truncated="truncated"
+                      :exportable="hasData"
+                      :importable="true"
+                      @export-json="exportJSON(false)"
+                      @import-json="onImportObject"
+                    />
                 </transition>
               </el-col>
             </el-row>
           </div>
         </transition>
+
         <!-- 步骤二：结果过滤功能 -->
         <transition name="step-fade" mode="out-in">
           <div v-if="currentStep === 2" key="2" class="step-content">
+            <!-- 过滤条件设置区域 -->
+            <FilterPanel v-model="expr" @clear="expr = ''" />
             <!-- 左右结构：原始响应 + 过滤结果 -->
             <el-row :gutter="20">
               <!-- 左边：原始响应组件 -->
@@ -87,9 +90,7 @@
                   @export-json="exportJSON(true)"
                   @export-csv="exportCSV"
                   @export-filtered-json="exportJSON(true)"
-                >
-                  <FilterPanel v-model="expr" @clear="expr = ''" />
-                </ResponseViewer>
+                />
               </el-col>
             </el-row>
           </div>
