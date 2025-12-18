@@ -115,6 +115,7 @@ import FilterPanel from './components/FilterPanel.vue';
 import DataTable from './components/DataTable.vue';
 import { parseCurl } from './utils/curlParser';
 import { query } from './utils/jmesPathHelper';
+import { sendCurlRequest } from './utils/requestSender';
 import { ArrowLeft, ArrowRight } from '@element-plus/icons-vue';
 
 const curlText = ref('');
@@ -189,51 +190,14 @@ async function onSend() {
   nonJson.value = false;
   rawData.value = null;
   rawText.value = '';
-  const p = parseCurl(curlText.value);
-  if (!p.ok) {
-    error.value = p.error;
-    return;
-  }
-  const req = p.request;
-  let url = req.url;
-  const opts = { method: req.method, headers: { ...req.headers } };
-  if (req.body != null && req.method !== 'GET') {
-    if (typeof req.body === 'object') {
-      opts.body = JSON.stringify(req.body);
-      opts.headers['Content-Type'] = opts.headers['Content-Type'] || 'application/json';
-    } else {
-      opts.body = String(req.body);
-    }
-  }
-  const proxies = [];
-  if (proxy.value) proxies.push(proxy.value.replace(/\/$/, '') + '/');
-  proxies.push('https://cors.isomorphic-git.org/');
   loading.value = true;
   try {
-    let res;
-    try {
-      res = await fetch(url, opts);
-    } catch (e) {
-      let lastErr = e;
-      for (const px of proxies) {
-        try {
-          res = await fetch(px + url, opts);
-          lastErr = null;
-          break;
-        } catch (ee) {
-          lastErr = ee;
-        }
-      }
-      if (!res && lastErr) throw lastErr;
-    }
-    const txt = await res.text();
-    const max = 1024 * 1024;
-    rawText.value = txt.length > max ? ((truncated.value = true), txt.slice(0, max)) : txt;
-    try {
-      rawData.value = JSON.parse(rawText.value);
-    } catch {
-      nonJson.value = true;
-    }
+    const result = await sendCurlRequest(curlText.value, proxy.value);
+    error.value = result.error;
+    truncated.value = result.truncated;
+    nonJson.value = result.nonJson;
+    rawData.value = result.data;
+    rawText.value = result.text;
   } catch (e) {
     error.value = String(e.message || e);
   } finally {
