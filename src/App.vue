@@ -4,54 +4,77 @@
       <h1 style="font-size:2.5rem;font-weight:700;margin:0">🌐 Curl to JSON</h1>
       <p style="font-size:1.1rem;margin:8px 0 0 0;opacity:.9">快速将cURL命令转换为可视化JSON数据的工具</p>
     </div>
+    
     <!-- 使用Element Plus的Steps组件 -->
     <el-steps :active="currentStep - 1" finish-status="success" align-center style="margin-bottom: 40px">
-      <el-step v-for="(step, index) in steps" :key="index" :title="step.title"
-               :description="step.description"></el-step>
+      <el-step v-for="(step, index) in steps" :key="index" :title="step.title" :description="step.description"></el-step>
     </el-steps>
-
+    
     <!-- 步骤内容区域 -->
     <div class="steps-content">
-      <!-- 步骤一：curl命令发送与结果展示 -->
-      <div class="step-content">
-        <CurlInput v-if="currentStep === 1" style="width: 50vw;margin: 0 auto" v-model="curlText" v-model:proxy="proxy"
-                   :valid="parseValid"
-                   @send="onSend"/>
-        <transition name="fade">
-          <div v-if="hasData&&(currentStep === 1 || currentStep === 2)" style="margin-top: 20px">
-            <el-divider></el-divider>
-            <div style="width: 70vw;margin:0 auto">
-              <ResponseViewer :data="rawData" :error="error" :loading="loading" :nonJson="nonJson" :text="rawText"
-                              :title="'原始响应'" :truncated="truncated" :exportable="hasData" :importable="true"
-                              @export-json="exportJSON(false)" @import-json="onImportObject"/>
+      <!-- 步骤内容切换容器 -->
+      <div class="step-container">
+        <!-- 步骤一：curl命令发送与结果展示 -->
+        <transition name="step-fade" mode="out-in">
+          <div v-if="currentStep === 1" key="1" class="step-content">
+            <CurlInput style="width: 50vw;margin: 0 auto" v-model="curlText" v-model:proxy="proxy" :valid="parseValid"
+                       @send="onSend"/>
+            <transition name="fade">
+              <div v-if="hasData" style="margin-top: 20px">
+                <el-divider></el-divider>
+                <div style="width: 70vw;margin:0 auto">
+                  <ResponseViewer :data="rawData" :error="error" :loading="loading" :nonJson="nonJson" :text="rawText"
+                                  :title="'原始响应'" :truncated="truncated" :exportable="hasData" :importable="true"
+                                  @export-json="exportJSON(false)" @import-json="onImportObject"/>
+                </div>
+              </div>
+            </transition>
+          </div>
+        </transition>
+        
+        <!-- 步骤二：结果过滤功能 -->
+        <transition name="step-fade" mode="out-in">
+          <div v-if="currentStep === 2" key="2" class="step-content">
+            <div style="margin-top: 20px">
+              <FilterPanel v-model="expr" @clear="expr=''" style="margin-bottom: 20px"/>
+              <el-divider></el-divider>
+              <div style="width: 70vw;margin:0 auto">
+                <ResponseViewer :data="filtered" :title="'过滤结果'" :exportable="hasFiltered" :csvExportable="isArray"
+                                @export-json="exportJSON(true)" @export-csv="exportCSV" @export-filtered-json="exportJSON(true)"/>
+              </div>
+            </div>
+          </div>
+        </transition>
+        
+        <!-- 步骤三：表格结构化展示 -->
+        <transition name="step-fade" mode="out-in">
+          <div v-if="currentStep === 3" key="3" class="step-content">
+            <div style="margin-top: 20px">
+              <el-divider></el-divider>
+              <DataTable :items="filteredArray" title="JSON表格" @export-csv="exportCSV"/>
             </div>
           </div>
         </transition>
       </div>
-
-      <!-- 步骤二：结果过滤功能 -->
-      <div v-if="currentStep === 2" class="step-content">
-        <transition name="fade">
-          <div style="margin-top: 20px">
-            <FilterPanel v-model="expr" @clear="expr=''" style="margin-bottom: 20px"/>
-            <el-divider></el-divider>
-            <div style="width: 70vw;margin:0 auto">
-              <ResponseViewer :data="filtered" :title="'过滤结果'" :exportable="hasFiltered" :csvExportable="isArray"
-                              @export-json="exportJSON(true)" @export-csv="exportCSV"
-                              @export-filtered-json="exportJSON(true)"/>
-            </div>
-          </div>
-        </transition>
-      </div>
-
-      <!-- 步骤三：表格结构化展示 -->
-      <div v-if="currentStep === 3" class="step-content">
-        <transition name="fade">
-          <div style="margin-top: 20px">
-            <el-divider></el-divider>
-            <DataTable :items="filteredArray" title="JSON表格" @export-csv="exportCSV"/>
-          </div>
-        </transition>
+      
+      <!-- 步骤导航按钮 -->
+      <div class="step-navigation" style="text-align: center;margin-top: 40px">
+        <el-button 
+          type="primary" 
+          plain 
+          :disabled="currentStep === 1" 
+          @click="prevStep"
+        >
+          上一步
+        </el-button>
+        <el-button 
+          type="primary" 
+          :disabled="!canGoNext"
+          @click="nextStep"
+          style="margin-left: 20px"
+        >
+          下一步
+        </el-button>
       </div>
     </div>
   </div>
@@ -92,17 +115,34 @@ const steps = [
   }
 ]
 
-// 当前步骤，根据数据状态自动计算
-const currentStep = computed(() => {
-  if (isArray.value && filteredArray.value.length > 0) {
-    return 3
-  } else if (hasFiltered.value) {
-    return 2
-  } else if (hasData.value) {
-    return 1
+// 当前步骤，改为ref以便手动控制
+const currentStep = ref(1)
+
+// 控制下一步按钮是否可用
+const canGoNext = computed(() => {
+  if (currentStep.value === 1) {
+    return hasData.value
+  } else if (currentStep.value === 2) {
+    return hasFiltered.value
+  } else if (currentStep.value === 3) {
+    return false
   }
-  return 1
+  return true
 })
+
+// 上一步
+function prevStep() {
+  if (currentStep.value > 1) {
+    currentStep.value--
+  }
+}
+
+// 下一步
+function nextStep() {
+  if (canGoNext.value && currentStep.value < steps.length) {
+    currentStep.value++
+  }
+}
 
 const parseValid = computed(() => {
   const r = parseCurl(curlText.value)
@@ -234,10 +274,28 @@ function onImportObject(obj) {
   max-width: 900px;
 }
 
+.step-container {
+  position: relative;
+  min-height: 300px;
+}
+
 .step-content {
   margin-bottom: 40px;
 }
 
+/* 步骤切换动画 */
+.step-fade-enter-active,
+.step-fade-leave-active {
+  transition: all 0.5s ease;
+}
+
+.step-fade-enter-from,
+.step-fade-leave-to {
+  opacity: 0;
+  transform: translateY(20px);
+}
+
+/* 淡入淡出动画 */
 .fade-enter-active,
 .fade-leave-active {
   transition: opacity 0.5s ease;
@@ -248,18 +306,33 @@ function onImportObject(obj) {
   opacity: 0;
 }
 
+/* 步骤导航样式 */
+.step-navigation {
+  text-align: center;
+  margin-top: 40px;
+  margin-bottom: 20px;
+}
+
 /* 响应式设计 */
 @media (max-width: 768px) {
   .app-container {
     padding: 10px;
   }
-
+  
   .step-content {
     margin-bottom: 20px;
   }
-
+  
   .el-steps {
     margin-bottom: 20px;
+  }
+  
+  .step-container {
+    min-height: 200px;
+  }
+  
+  .step-navigation {
+    margin-top: 20px;
   }
 }
 </style>
