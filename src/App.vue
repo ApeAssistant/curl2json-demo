@@ -33,7 +33,7 @@
             <el-row :gutter="20">
               <!-- 左边：curl发送组件 -->
               <el-col :span="12">
-                <CurlInput v-model="curlText" v-model:proxy="proxy" :valid="parseValid" @send="onSend" />
+                <CurlInput v-model="curlText" :valid="parseValid" @send="onSend" />
               </el-col>
               <!-- 右边：原始响应组件 -->
               <el-col :span="12">
@@ -115,11 +115,9 @@ import FilterPanel from './components/FilterPanel.vue';
 import DataTable from './components/DataTable.vue';
 import { parseCurl } from './utils/curlParser';
 import { query } from './utils/jmesPathHelper';
-import { sendCurlRequest } from './utils/requestSender';
 import { ArrowLeft, ArrowRight } from '@element-plus/icons-vue';
 
 const curlText = ref('');
-const proxy = ref('');
 const loading = ref(false);
 const error = ref('');
 const rawData = ref(null);
@@ -192,12 +190,26 @@ async function onSend() {
   rawText.value = '';
   loading.value = true;
   try {
-    const result = await sendCurlRequest(curlText.value, proxy.value);
-    error.value = result.error;
-    truncated.value = result.truncated;
-    nonJson.value = result.nonJson;
-    rawData.value = result.data;
-    rawText.value = result.text;
+    const result = await sendCurlRequest(curlText.value);
+    if (result.success) {
+      // 解析响应体，判断是否为JSON
+      let parsedData = null;
+      let isNonJson = true;
+      try {
+        parsedData = JSON.parse(result.data.body);
+        isNonJson = false;
+      } catch {
+        isNonJson = true;
+      }
+
+      rawData.value = parsedData;
+      rawText.value = result.data.body;
+      nonJson.value = isNonJson;
+      // 假设截断逻辑保持不变
+      truncated.value = result.data.body.length > 1024 * 1024;
+    } else {
+      error.value = result.message;
+    }
   } catch (e) {
     error.value = String(e.message || e);
   } finally {

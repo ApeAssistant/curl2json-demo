@@ -2,7 +2,7 @@
   <el-card shadow="hover">
     <template #header>
       <span>📝 cURL 命令输入</span>
-      <el-text size="small" type="info">粘贴您的 cURL 命令并配置代理设置 </el-text>
+      <el-text size="small" type="info">粘贴您的 cURL 命令 </el-text>
     </template>
     <div>
       <div>
@@ -40,12 +40,10 @@ hljs.registerLanguage('bash', bash);
 
 const props = defineProps({
   modelValue: { type: String, default: '' },
-  proxy: { type: String, default: '' },
   valid: { type: Boolean, default: true },
 });
-const emits = defineEmits(['update:modelValue', 'update:proxy', 'send']);
+const emits = defineEmits(['update:modelValue', 'send']);
 const text = computed({ get: () => props.modelValue, set: (v) => emits('update:modelValue', v) });
-const proxyModel = computed({ get: () => props.proxy, set: (v) => emits('update:proxy', v) });
 const highlighted = computed(() => {
   const s = props.modelValue || '';
   try {
