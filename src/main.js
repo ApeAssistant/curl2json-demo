@@ -4,6 +4,8 @@ import ElementPlus from 'element-plus/es';
 import 'element-plus/dist/index.css';
 import './main.css';
 import 'highlight.js/styles/atom-one-dark.css';
+import pinia from './stores';
 const app = createApp(App);
 app.use(ElementPlus);
+app.use(pinia);
 app.mount('#app');

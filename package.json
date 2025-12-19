@@ -15,6 +15,7 @@
     "element-plus": "^2.8.6",
     "highlight.js": "^11.9.0",
     "jmespath": "^0.16.0",
+    "pinia": "^2.2.0",
     "vue": "^3.4.0"
   },
   "devDependencies": {
