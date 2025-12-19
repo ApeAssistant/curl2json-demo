@@ -115,6 +115,7 @@ import FilterPanel from './components/FilterPanel.vue';
 import DataTable from './components/DataTable.vue';
 import { parseCurl } from './utils/curlParser';
 import { query } from './utils/jmesPathHelper';
+import { sendCurlRequest } from './api/index.js';
 import { ArrowLeft, ArrowRight } from '@element-plus/icons-vue';
 
 const curlText = ref('');
