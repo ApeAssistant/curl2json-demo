@@ -6,7 +6,7 @@
   font-size: 1.1rem;
 }
 .completion-item {
-  padding: 8px 12px;
+  padding: 2px 6px;
   cursor: pointer;
   border-radius: 4px;
   transition: background-color 0.2s;
@@ -28,7 +28,6 @@
 .key-type {
   font-size: 12px;
   color: #909399;
-  margin-left: 8px;
 }
 .autocomplete-wrapper {
   position: relative;
@@ -54,6 +53,8 @@
         <el-row :gutter="12">
           <el-col :span="20">
             <div class="autocomplete-wrapper">
+              <el-text> {{ autocompleteValue }}</el-text>
+              <el-text>{{ cursorPosition }}</el-text>
               <el-autocomplete
                 v-model="autocompleteValue"
                 :fetch-suggestions="fetchSuggestions"
@@ -148,7 +149,7 @@ const handleBlur = () => {
 
 // 更新光标位置
 const updateCursorPosition = () => {
-  const inputElement = document.querySelector('.el-autocomplete__input');
+  const inputElement = document.querySelector('.el-input__inner');
   if (inputElement) {
     cursorPosition.value = inputElement.selectionStart || 0;
   }
@@ -158,15 +159,23 @@ const updateCursorPosition = () => {
 const extractKeyword = () => {
   const input = autocompleteValue.value;
   const position = cursorPosition.value;
-  
+
   // 从光标位置向左查找，直到遇到点符号或字符串开头
   let start = position;
-  while (start > 0 && input[start - 1] !== '.' && input[start - 1] !== '[' && input[start - 1] !== ']' && 
-         input[start - 1] !== '{' && input[start - 1] !== '}' && input[start - 1] !== ',' && 
-         input[start - 1] !== '(' && input[start - 1] !== ')') {
+  while (
+    start > 0 &&
+    input[start - 1] !== '.' &&
+    input[start - 1] !== '[' &&
+    input[start - 1] !== ']' &&
+    input[start - 1] !== '{' &&
+    input[start - 1] !== '}' &&
+    input[start - 1] !== ',' &&
+    input[start - 1] !== '(' &&
+    input[start - 1] !== ')'
+  ) {
     start--;
   }
-  
+
   // 提取关键词
   const keyword = input.substring(start, position);
   return keyword;
@@ -182,36 +191,41 @@ const handleSelect = (item) => {
 const insertKey = (key) => {
   const currentValue = autocompleteValue.value;
   const position = cursorPosition.value;
-  
+
   // 提取当前关键词和上下文
   const keyword = extractKeyword();
-  
+
   // 构建新的值
   let newValue = '';
-  
+
   if (keyword) {
     // 如果有关键词，替换关键词
     newValue = currentValue.substring(0, position - keyword.length) + key + currentValue.substring(position);
   } else {
     // 如果没有关键词，直接插入
     let insertKey = key;
-    
+
     // 判断是否需要添加点号
-    if (position > 0 && currentValue[position - 1] !== '.' && currentValue[position - 1] !== '[' && 
-        currentValue[position - 1] !== '{' && currentValue[position - 1] !== ',' && 
-        currentValue[position - 1] !== '(') {
+    if (
+      position > 0 &&
+      currentValue[position - 1] !== '.' &&
+      currentValue[position - 1] !== '[' &&
+      currentValue[position - 1] !== '{' &&
+      currentValue[position - 1] !== ',' &&
+      currentValue[position - 1] !== '('
+    ) {
       insertKey = '.' + insertKey;
     }
-    
+
     newValue = currentValue.substring(0, position) + insertKey + currentValue.substring(position);
   }
-  
+
   autocompleteValue.value = newValue;
   emit('update:modelValue', newValue);
-  
+
   // 关闭 keys 弹窗
   keysPopoverVisible.value = false;
-  
+
   // 更新光标位置到插入内容之后
   nextTick(() => {
     const inputElement = document.querySelector('.el-autocomplete__input');
@@ -228,17 +242,17 @@ const insertKey = (key) => {
 const fetchSuggestions = (queryString, callback) => {
   // 更新当前光标位置
   updateCursorPosition();
-  
+
   // 如果没有可用的 key，返回空数组
   if (!availableKeys.value.length) {
     callback([]);
     return;
   }
-  
+
   // 提取当前关键词
   const keyword = extractKeyword();
   const searchTerm = keyword || queryString;
-  
+
   // 过滤匹配的 key
   const filteredKeys = availableKeys.value.filter((key) => {
     // 如果有关键词，过滤包含该关键词的 key
@@ -248,13 +262,13 @@ const fetchSuggestions = (queryString, callback) => {
     // 如果没有关键词，返回所有 key
     return true;
   });
-  
+
   // 格式化建议项
   const suggestions = filteredKeys.map((key) => ({
     value: key,
     type: key.includes('.') ? '嵌套属性' : '顶级属性',
   }));
-  
+
   callback(suggestions);
 };
 </script>
