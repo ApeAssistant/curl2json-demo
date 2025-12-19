@@ -1,18 +1,18 @@
 <template>
   <div class="app-container">
     <!-- 步骤条与导航按钮整合 -->
-    <el-card style="margin-bottom: 20px" shadow="hover">
+    <el-card id="nav" style="margin-bottom: 20px" shadow="hover">
       <el-row :gutter="20" align="middle">
         <el-col :span="5">
           <div>
-            <h1>🌐 Curl to JSON</h1>
-            <p>快速将cURL命令转换为可视化JSON数据的工具</p>
+            <h3>🌐 Curl to JSON</h3>
+            <!--            <p>快速将cURL命令转换为可视化JSON数据的工具</p>-->
           </div>
         </el-col>
         <!-- 左边：步骤条 -->
         <el-col :span="15">
           <el-steps :active="store.currentStep - 1" finish-status="success" align-center>
-            <el-step v-for="(step, index) in store.steps" :key="index" :title="step.title" :description="step.description"></el-step>
+            <el-step v-for="(step, index) in store.steps" :key="index" :title="step.title"></el-step>
           </el-steps>
         </el-col>
         <!-- 右边：导航按钮 -->
@@ -38,19 +38,19 @@
               <!-- 右边：原始响应组件 -->
               <el-col :span="12">
                 <transition name="fade">
-                    <ResponseViewer
-                      :data="store.rawData"
-                      :error="store.error"
-                      :loading="store.loading"
-                      :nonJson="store.nonJson"
-                      :text="store.rawText"
-                      :title="'原始响应'"
-                      :truncated="store.truncated"
-                      :exportable="store.hasData"
-                      :importable="true"
-                      @export-json="exportJSON(false)"
-                      @import-json="onImportObject"
-                    />
+                  <ResponseViewer
+                    :data="store.rawData"
+                    :error="store.error"
+                    :loading="store.loading"
+                    :nonJson="store.nonJson"
+                    :text="store.rawText"
+                    :title="'原始响应'"
+                    :truncated="store.truncated"
+                    :exportable="store.hasData"
+                    :importable="true"
+                    @export-json="exportJSON(false)"
+                    @import-json="onImportObject"
+                  />
                 </transition>
               </el-col>
             </el-row>
@@ -99,7 +99,7 @@
         <!-- 步骤三：表格结构化展示 -->
         <transition name="step-fade" mode="out-in">
           <div v-if="store.currentStep === 3" key="3" class="step-content">
-              <DataTable :items="store.filteredArray" title="JSON表格" @export-csv="exportCSV" />
+            <DataTable :items="store.filteredArray" title="JSON表格" @export-csv="exportCSV" />
           </div>
         </transition>
       </div>
@@ -123,12 +123,12 @@ const store = useAppStore();
 // 使用store中的数据和方法
 const curlText = computed({
   get: () => store.curlText,
-  set: (value) => store.setCurlText(value)
+  set: (value) => store.setCurlText(value),
 });
 
 const expr = computed({
   get: () => store.expr,
-  set: (value) => store.setExpr(value)
+  set: (value) => store.setExpr(value),
 });
 
 const parseValid = computed(() => {
@@ -219,6 +219,10 @@ function onImportObject(obj) {
 .app-container {
   margin: 0 auto;
   padding: 20px;
+}
+
+#nav .el-card__body {
+  padding: 10px 40px !important;
 }
 
 .steps-content {

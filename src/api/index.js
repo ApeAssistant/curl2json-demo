@@ -14,7 +14,7 @@ export async function sendCurlRequest(curlCommand) {
       return {
         success: false,
         message: '无效的curl命令，必须以curl开头',
-        data: null
+        data: null,
       };
     }
 
@@ -38,7 +38,7 @@ export async function sendCurlRequest(curlCommand) {
     return {
       success: false,
       message: error.message || '发送请求时发生未知错误',
-      data: null
+      data: null,
     };
   }
 }

@@ -71,26 +71,21 @@ export const useAppStore = defineStore('app', () => {
   };
 
   // 监听 rawData 变化，自动提取所有 key
-  watch(rawData, (newData) => {
-    if (newData && typeof newData === 'object') {
-      extractedKeys.value = extractKeys(newData);
-    } else {
-      extractedKeys.value = [];
-    }
-  }, { immediate: true, deep: true });
+  watch(
+    rawData,
+    (newData) => {
+      if (newData && typeof newData === 'object') {
+        extractedKeys.value = extractKeys(newData);
+      } else {
+        extractedKeys.value = [];
+      }
+    },
+    { immediate: true, deep: true }
+  );
 
   // 监听数据变化，自动保存到本地存储
   const unwatchers = [];
-  unwatchers.push(
-    curlText,
-    error,
-    rawData,
-    rawText,
-    truncated,
-    nonJson,
-    expr,
-    currentStep
-  );
+  unwatchers.push(curlText, error, rawData, rawText, truncated, nonJson, expr, currentStep);
 
   // 方法
   const setCurlText = (value) => {

@@ -52,22 +52,9 @@
       <el-col :span="12">
         <div class="filter-section">
           <el-text>⚡ 表达式输入</el-text>
-          <el-row :gutter="8" align="middle" style="margin-top: 6px">
-            <el-col :span="21">
-              <el-input
-                v-model="inputValue"
-                placeholder="jmespath表达式，如 users[].{id:id,name:name}"
-                @update:model-value="handleInputChange"
-                clearable
-                size="small"
-              >
-                <template #prefix><span class="fh">λ</span> </template>
-              </el-input>
-            </el-col>
-            <el-col :span="3"> 
-              <el-button plain type="danger" @click="$emit('clear')" size="small" style="padding: 4px 8px">🗑️ 清空 </el-button>
-            </el-col>
-          </el-row>
+          <el-input v-model="inputValue" style="margin-top: 20px" placeholder="jmespath表达式，如 users[].{id:id,name:name}" @update:model-value="handleInputChange" clearable>
+            <template #prefix><span class="fh">λ</span> </template>
+          </el-input>
         </div>
       </el-col>
     </el-row>

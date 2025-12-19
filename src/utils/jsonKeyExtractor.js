@@ -10,10 +10,10 @@ export function extractKeys(data) {
 
     if (Array.isArray(obj)) {
       // 遍历数组元素
-      obj.forEach(item => traverse(item, prefix));
+      obj.forEach((item) => traverse(item, prefix));
     } else if (typeof obj === 'object') {
       // 遍历对象属性
-      Object.keys(obj).forEach(key => {
+      Object.keys(obj).forEach((key) => {
         const fullKey = prefix ? `${prefix}.${key}` : key;
         keys.add(fullKey);
         // 递归遍历嵌套对象
@@ -39,18 +39,18 @@ export function extractKeys(data) {
 export function getContextFromExpression(expr, cursorPosition) {
   // 获取光标位置前的表达式部分
   const prefix = expr.substring(0, cursorPosition);
-  
+
   // 查找最近的分隔符，确定上下文
   const separators = ['.', '[', ']', '(', ')', '{', '}', ','];
   let lastSeparatorIndex = -1;
-  
+
   for (const sep of separators) {
     const index = prefix.lastIndexOf(sep);
     if (index > lastSeparatorIndex) {
       lastSeparatorIndex = index;
     }
   }
-  
+
   // 返回上下文前缀
   return lastSeparatorIndex >= 0 ? prefix.substring(0, lastSeparatorIndex + 1) : '';
 }
