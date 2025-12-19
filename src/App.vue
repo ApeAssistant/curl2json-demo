@@ -11,14 +11,14 @@
         </el-col>
         <!-- 左边：步骤条 -->
         <el-col :span="15">
-          <el-steps :active="currentStep - 1" finish-status="success" align-center>
-            <el-step v-for="(step, index) in steps" :key="index" :title="step.title" :description="step.description"></el-step>
+          <el-steps :active="store.currentStep - 1" finish-status="success" align-center>
+            <el-step v-for="(step, index) in store.steps" :key="index" :title="step.title" :description="step.description"></el-step>
           </el-steps>
         </el-col>
         <!-- 右边：导航按钮 -->
         <el-col :span="4">
-          <el-button type="primary" circle :icon="ArrowLeft" :disabled="currentStep === 1" @click="prevStep"> </el-button>
-          <el-button type="primary" circle :icon="ArrowRight" :disabled="currentStep === 3" @click="nextStep"> </el-button>
+          <el-button type="primary" circle :icon="ArrowLeft" :disabled="store.currentStep === 1" @click="store.prevStep"> </el-button>
+          <el-button type="primary" circle :icon="ArrowRight" :disabled="store.currentStep === 3" @click="store.nextStep"> </el-button>
         </el-col>
       </el-row>
     </el-card>
@@ -29,7 +29,7 @@
       <div class="step-container">
         <!-- 步骤一：curl命令发送与结果展示 -->
         <transition name="step-fade" mode="out-in">
-          <div v-if="currentStep === 1" key="1" class="step-content">
+          <div v-if="store.currentStep === 1" key="1" class="step-content">
             <el-row :gutter="20">
               <!-- 左边：curl发送组件 -->
               <el-col :span="12">
@@ -39,14 +39,14 @@
               <el-col :span="12">
                 <transition name="fade">
                     <ResponseViewer
-                      :data="rawData"
-                      :error="error"
-                      :loading="loading"
-                      :nonJson="nonJson"
-                      :text="rawText"
+                      :data="store.rawData"
+                      :error="store.error"
+                      :loading="store.loading"
+                      :nonJson="store.nonJson"
+                      :text="store.rawText"
                       :title="'原始响应'"
-                      :truncated="truncated"
-                      :exportable="hasData"
+                      :truncated="store.truncated"
+                      :exportable="store.hasData"
                       :importable="true"
                       @export-json="exportJSON(false)"
                       @import-json="onImportObject"
@@ -59,7 +59,7 @@
 
         <!-- 步骤二：结果过滤功能 -->
         <transition name="step-fade" mode="out-in">
-          <div v-if="currentStep === 2" key="2" class="step-content">
+          <div v-if="store.currentStep === 2" key="2" class="step-content">
             <!-- 过滤条件设置区域 -->
             <FilterPanel v-model="expr" @clear="expr = ''" />
             <!-- 左右结构：原始响应 + 过滤结果 -->
@@ -67,14 +67,14 @@
               <!-- 左边：原始响应组件 -->
               <el-col :span="12">
                 <ResponseViewer
-                  :data="rawData"
-                  :error="error"
-                  :loading="loading"
-                  :nonJson="nonJson"
-                  :text="rawText"
+                  :data="store.rawData"
+                  :error="store.error"
+                  :loading="store.loading"
+                  :nonJson="store.nonJson"
+                  :text="store.rawText"
                   :title="'原始响应'"
-                  :truncated="truncated"
-                  :exportable="hasData"
+                  :truncated="store.truncated"
+                  :exportable="store.hasData"
                   :importable="true"
                   @export-json="exportJSON(false)"
                   @import-json="onImportObject"
@@ -83,10 +83,10 @@
               <!-- 右边：过滤结果组件 -->
               <el-col :span="12">
                 <ResponseViewer
-                  :data="filtered"
+                  :data="store.filtered"
                   :title="'过滤结果'"
-                  :exportable="hasFiltered"
-                  :csvExportable="isArray"
+                  :exportable="store.hasFiltered"
+                  :csvExportable="store.isArray"
                   @export-json="exportJSON(true)"
                   @export-csv="exportCSV"
                   @export-filtered-json="exportJSON(true)"
@@ -98,8 +98,8 @@
 
         <!-- 步骤三：表格结构化展示 -->
         <transition name="step-fade" mode="out-in">
-          <div v-if="currentStep === 3" key="3" class="step-content">
-              <DataTable :items="filteredArray" title="JSON表格" @export-csv="exportCSV" />
+          <div v-if="store.currentStep === 3" key="3" class="step-content">
+              <DataTable :items="store.filteredArray" title="JSON表格" @export-csv="exportCSV" />
           </div>
         </transition>
       </div>
@@ -108,90 +108,45 @@
 </template>
 
 <script setup>
-import { computed, ref } from 'vue';
+import { computed } from 'vue';
 import CurlInput from './components/CurlInput.vue';
 import ResponseViewer from './components/ResponseViewer.vue';
 import FilterPanel from './components/FilterPanel.vue';
 import DataTable from './components/DataTable.vue';
 import { parseCurl } from './utils/curlParser';
-import { query } from './utils/jmesPathHelper';
 import { sendCurlRequest } from './api/index.js';
 import { ArrowLeft, ArrowRight } from '@element-plus/icons-vue';
+import { useAppStore } from './stores/app';
 
-const curlText = ref('');
-const loading = ref(false);
-const error = ref('');
-const rawData = ref(null);
-const rawText = ref('');
-const truncated = ref(false);
-const nonJson = ref(false);
-const expr = ref('');
+const store = useAppStore();
 
-// 步骤定义
-const steps = [
-  {
-    title: '发送请求',
-    description: '输入cURL命令并发送，查看原始响应结果',
-  },
-  {
-    title: '结果过滤',
-    description: '使用JMESPath表达式过滤响应数据',
-  },
-  {
-    title: '表格展示',
-    description: '将过滤后的数据以结构化表格形式展示',
-  },
-];
-
-// 当前步骤，改为ref以便手动控制
-const currentStep = ref(1);
-
-// 控制下一步按钮是否可用
-const canGoNext = computed(() => {
-  if (currentStep.value === 1) {
-    return hasData.value;
-  } else if (currentStep.value === 2) {
-    return hasFiltered.value;
-  } else if (currentStep.value === 3) {
-    return false;
-  }
-  return true;
+// 使用store中的数据和方法
+const curlText = computed({
+  get: () => store.curlText,
+  set: (value) => store.setCurlText(value)
 });
 
-// 上一步
-function prevStep() {
-  if (currentStep.value > 1) {
-    currentStep.value--;
-  }
-}
-
-// 下一步
-function nextStep() {
-  if (canGoNext.value && currentStep.value < steps.length) {
-    currentStep.value++;
-  }
-}
+const expr = computed({
+  get: () => store.expr,
+  set: (value) => store.setExpr(value)
+});
 
 const parseValid = computed(() => {
-  const r = parseCurl(curlText.value);
+  const r = parseCurl(store.curlText);
   return r.ok;
 });
 
 const hint = computed(() => {
-  if (error.value) return error.value;
-  if (nonJson.value) return '非JSON数据';
+  if (store.error) return store.error;
+  if (store.nonJson) return '非JSON数据';
   return '';
 });
 
 async function onSend() {
-  error.value = '';
-  truncated.value = false;
-  nonJson.value = false;
-  rawData.value = null;
-  rawText.value = '';
-  loading.value = true;
+  store.resetData();
+  store.setLoading(true);
   try {
-    const result = await sendCurlRequest(curlText.value);
+    const result = await sendCurlRequest(store.curlText);
     if (result.success) {
       // 解析响应体，判断是否为JSON
       let parsedData = null;
@@ -203,35 +158,24 @@ async function onSend() {
         isNonJson = true;
       }
 
-      rawData.value = parsedData;
-      rawText.value = result.data.body;
-      nonJson.value = isNonJson;
+      store.setRawData(parsedData);
+      store.setRawText(result.data.body);
+      store.setNonJson(isNonJson);
       // 假设截断逻辑保持不变
-      truncated.value = result.data.body.length > 1024 * 1024;
+      store.setTruncated(result.data.body.length > 1024 * 1024);
     } else {
-      error.value = result.message;
+      store.setError(result.message);
     }
   } catch (e) {
-    error.value = String(e.message || e);
+    store.setError(String(e.message || e));
   } finally {
-    loading.value = false;
+    store.setLoading(false);
   }
 }
 
-const filtered = computed(() => query(nonJson.value ? rawText.value : rawData.value, expr.value));
-const hasData = computed(() => rawData.value != null || rawText.value);
-const hasFiltered = computed(() => filtered.value != null);
-const isArray = computed(() => Array.isArray(filtered.value));
-const filteredArray = computed(() => {
-  if (!Array.isArray(filtered.value)) return [];
-  return filtered.value.map((v) => (typeof v === 'object' ? v : { value: v }));
-});
-
 function exportJSON(onlyFiltered) {
-  const data = onlyFiltered ? filtered.value : nonJson.value ? rawText.value : rawData.value;
-  const blob = new Blob([typeof data === 'string' ? data : JSON.stringify(data, null, 2)], {
-    type: 'application/json',
-  });
+  const data = onlyFiltered ? store.filtered : store.nonJson ? store.rawText : store.rawData;
+  const blob = new Blob([typeof data === 'string' ? data : JSON.stringify(data, null, 2)], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
@@ -241,8 +185,8 @@ function exportJSON(onlyFiltered) {
 }
 
 function exportCSV() {
-  if (!Array.isArray(filtered.value)) return;
-  const arr = filtered.value;
+  if (!Array.isArray(store.filtered)) return;
+  const arr = store.filtered;
   const keys = Array.from(new Set(arr.flatMap((o) => Object.keys(typeof o === 'object' ? o : { value: o }))));
   const rows = [keys.join(',')].concat(
     arr.map((o) => {
@@ -261,12 +205,12 @@ function exportCSV() {
 
 function onImportObject(obj) {
   try {
-    rawData.value = obj;
-    nonJson.value = false;
-    expr.value = '';
-    error.value = '';
+    store.setRawData(obj);
+    store.setNonJson(false);
+    store.setExpr('');
+    store.setError('');
   } catch (e) {
-    error.value = '导入失败';
+    store.setError('导入失败');
   }
 }
 </script>
