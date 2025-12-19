@@ -64,42 +64,6 @@
                 clearable
               >
                 <template #prefix><span class="fh">λ</span> </template>
-                <template #suffix>
-                  <el-popover
-                    v-model:visible="keysPopoverVisible"
-                    placement="bottom"
-                    :width="600"
-                    trigger="manual"
-                  >
-                    <template #reference>
-                      <el-button
-                        type="primary"
-                        size="small"
-                        circle
-                        :disabled="!availableKeys.length"
-                        @click="keysPopoverVisible = !keysPopoverVisible"
-                      >
-                        📋
-                      </el-button>
-                    </template>
-                    <div>
-                      <el-text type="info" size="small">可用数据键（点击插入）：</el-text>
-                      <el-divider style="margin: 8px 0;"></el-divider>
-                      <div class="keys-list">
-                        <el-tag
-                          v-for="key in availableKeys"
-                          :key="key"
-                          effect="plain"
-                          @click="insertKey(key)"
-                          style="margin: 4px; cursor: pointer;"
-                          :class="{ 'el-tag--success': key.includes('.') }"
-                        >
-                          {{ key }}
-                        </el-tag>
-                      </div>
-                    </div>
-                  </el-popover>
-                </template>
                 <template #default="{ item }">
                   <div class="completion-item">
                     <span class="key-path">{{ item.value }}</span>
@@ -130,21 +94,15 @@ const keysPopoverVisible = ref(false);
 const cursorPosition = ref(0);
 
 // 监听外部 modelValue 变化，同步到内部 autocompleteValue
-watch(() => props.modelValue, (newValue) => {
-  autocompleteValue.value = newValue;
-});
+watch(
+  () => props.modelValue,
+  (newValue) => {
+    autocompleteValue.value = newValue;
+  }
+);
 
 // 常用表达式
-const exampleExpressions = [
-  '[].{id:id,name:name}',
-  '[0:3]',
-  '[].name',
-  '[?id>10]',
-  'sort_by(@, &name)',
-  '{total_count: length(@), items: @}',
-  'users[0].posts[].title',
-  'group_by(@, &category)'
-];
+const exampleExpressions = ['[].{id:id,name:name}', '[0:3]', '[].name', '[?id>10]', 'sort_by(@, &name)', '{total_count: length(@), items: @}', 'users[0].posts[].title', 'group_by(@, &category)'];
 
 // 可用的 key 列表，从 store 中获取
 const availableKeys = computed(() => store.extractedKeys);
@@ -175,18 +133,18 @@ const handleSelect = (item) => {
 const insertKey = (key) => {
   let currentValue = autocompleteValue.value;
   let position = cursorPosition.value;
-  
+
   // 处理特殊情况：如果当前位置有字符，需要判断是否需要添加点号
   if (position > 0 && currentValue[position - 1] !== '.' && currentValue[position - 1] !== '[' && currentValue[position - 1] !== '{' && currentValue[position - 1] !== ',') {
     // 如果前一个字符不是分隔符，添加点号
     key = '.' + key;
   }
-  
+
   // 插入 key
   const newValue = currentValue.substring(0, position) + key + currentValue.substring(position);
   autocompleteValue.value = newValue;
   emit('update:modelValue', newValue);
-  
+
   // 关闭 keys 弹窗
   keysPopoverVisible.value = false;
 };
@@ -198,24 +156,24 @@ const fetchSuggestions = (queryString, callback) => {
   if (inputElement) {
     cursorPosition.value = inputElement.selectionStart || 0;
   }
-  
+
   // 如果没有可用的 key，返回空数组
   if (!availableKeys.value.length) {
     callback([]);
     return;
   }
-  
+
   // 过滤匹配的 key
-  const filteredKeys = availableKeys.value.filter(key => {
+  const filteredKeys = availableKeys.value.filter((key) => {
     return key.toLowerCase().includes(queryString.toLowerCase());
   });
-  
+
   // 格式化建议项
-  const suggestions = filteredKeys.map(key => ({
+  const suggestions = filteredKeys.map((key) => ({
     value: key,
-    type: key.includes('.') ? '嵌套属性' : '顶级属性'
+    type: key.includes('.') ? '嵌套属性' : '顶级属性',
   }));
-  
+
   callback(suggestions);
 };
 </script>
