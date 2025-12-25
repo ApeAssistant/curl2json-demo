@@ -15,5 +15,6 @@
 
 ## 注意
 
-- 可能遇到 CORS 限制，可配置代理前缀
-- 大响应将截断为 1MB
+请结合它的兄弟项目一起使用 地址： [后端地址](https://github.com/ApeAssistant/curl2json-demo)
+
+Jmespath语法地址 [语法地址](https://jmespath.org/)
